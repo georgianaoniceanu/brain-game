@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test de Anatomie a Creierului 3D</title>
+    <title>Ghid Interactiv al Creierului și Demenței</title>
     <style>
         body {
             margin: 0;
@@ -12,39 +12,64 @@
             background-color: #f0f0f0;
         }
         canvas { display: block; }
-        #ui-container {
+        #info-panel {
             position: absolute;
             top: 20px;
             left: 20px;
-            background-color: rgba(255, 255, 255, 0.85);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-width: 400px;
+            width: 380px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
             z-index: 100;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 40px);
         }
-        #ui-container h1 {
-            margin: 0 0 10px 0;
-            font-size: 24px;
-            color: #333;
+        #info-panel h2 {
+            margin: 0 0 15px 0;
+            font-size: 26px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
         }
-        #feedback {
-            margin-top: 15px;
-            font-size: 18px;
+        #info-content {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #34495e;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        #navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+        #navigation button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #navigation button:hover {
+            background-color: #2980b9;
+        }
+        #navigation button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        #progress-indicator {
+            font-size: 16px;
             font-weight: bold;
-            min-height: 25px;
-        }
-        #instructions {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            color: #555;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: right;
-            line-height: 1.6;
-            z-index: 100;
+            color: #7f8c8d;
         }
         #loading-screen {
             position: absolute;
@@ -64,21 +89,18 @@
 </head>
 <body>
 
-    <div id="ui-container">
-        <h1>Găsește partea creierului:</h1>
-        <p id="question" style="font-size: 20px;">Se încarcă...</p>
-        <div id="feedback"></div>
-    </div>
-    
-    <div id="instructions">
-        <strong>Controale:</strong><br>
-        Click stânga + Trage: Rotește<br>
-        Click dreapta + Trage: Mută<br>
-        Rotiță mouse: Zoom
+    <div id="info-panel">
+        <h2 id="slide-title">Titlu</h2>
+        <p id="info-content">Conținut informativ...</p>
+        <div id="navigation">
+            <button id="prev-button">Anteriorul</button>
+            <span id="progress-indicator">1 / N</span>
+            <button id="next-button">Următorul</button>
+        </div>
     </div>
 
     <div id="loading-screen">
-        <p>Se încarcă modelul 3D al creierului...</p>
+        <p>Se încarcă modelul 3D și informațiile...</p>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -88,10 +110,10 @@
     <script>
         // --- Configurarea de bază a scenei Three.js ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color('#dbe9ff'); // Un albastru deschis pentru fundal
+        scene.background = new THREE.Color('#dbe9ff');
 
         const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 5, 15);
+        camera.position.set(0, 4, 18);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -99,174 +121,179 @@
         renderer.outputEncoding = THREE.sRGBEncoding;
         document.body.appendChild(renderer.domElement);
 
-        // --- Controale Cameră (OrbitControls) ---
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true; // Efect de "inerție" pentru o mișcare mai fluidă
-        controls.dampingFactor = 0.05;
-        controls.screenSpacePanning = false;
-        controls.minDistance = 5;
-        controls.maxDistance = 50;
-        controls.target.set(0, 2, 0); // Punctul în jurul căruia se rotește camera
+        controls.enableDamping = true;
+        controls.target.set(0, 2, 0);
 
         // --- Iluminare ---
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
-
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
         directionalLight.position.set(15, 20, 10);
         directionalLight.castShadow = true;
         scene.add(directionalLight);
 
-        // --- Variabile pentru logica jocului ---
+        // --- Variabile pentru logica prezentării ---
         let brainModel;
         const loader = new THREE.GLTFLoader();
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        
-        const questionElement = document.getElementById('question');
-        const feedbackElement = document.getElementById('feedback');
         const loadingScreen = document.getElementById('loading-screen');
-
-        let originalMaterials = {}; // Stochează materialele originale pentru a le restaura
-        let lastClickedObject = null;
-
-        // --- Lista de întrebări ---
-        // IMPORTANT: Valorile 'targetObjectName' trebuie să corespundă EXACT cu numele mesh-urilor din fișierul brain.glb
-        const questions = [
-            { questionText: "Cerebelul", targetObjectName: "Cerebellum" },
-            { questionText: "Lobul Frontal", targetObjectName: "FrontalLobe" },
-            { questionText: "Lobul Temporal", targetObjectName: "TemporalLobe" },
-            { questionText: "Lobul Parietal", targetObjectName: "ParietalLobe" },
-            { questionText: "Lobul Occipital", targetObjectName: "OccipitalLobe" },
-            { questionText: "Trunchiul Cerebral", targetObjectName: "Brainstem" }
-        ];
-        let currentQuestionIndex = 0;
-
-        // --- Încărcarea modelului 3D al creierului ---
-        loader.load(
-            'brain.glb', // ATENȚIE: Plasează fișierul 'brain.glb' în același folder cu acest fișier HTML
-            function (gltf) {
-                brainModel = gltf.scene;
-                brainModel.scale.set(1, 1, 1); // Ajustează scara dacă este necesar
-                brainModel.position.set(0, 2, 0); // Poziționează modelul în scenă
-
-                // Parcurge toate părțile modelului pentru a activa umbrele și a stoca materialele
-                brainModel.traverse((node) => {
-                    if (node.isMesh) {
-                        node.castShadow = true;
-                        node.receiveShadow = true;
-                        // Stochează materialul original folosind numele unic al obiectului
-                        originalMaterials[node.name] = node.material;
-                    }
-                });
-                
-                scene.add(brainModel);
-                loadingScreen.style.display = 'none'; // Ascunde ecranul de încărcare
-                displayNextQuestion(); // Afișează prima întrebare
-            },
-            undefined,
-            function (error) {
-                console.error('O eroare a apărut la încărcarea modelului:', error);
-                loadingScreen.innerHTML = 'Eroare la încărcarea modelului 3D. Verifică consola pentru detalii.';
-            }
-        );
-
-        // --- Funcții pentru logica jocului ---
-        function displayNextQuestion() {
-            if (currentQuestionIndex < questions.length) {
-                questionElement.textContent = questions[currentQuestionIndex].questionText;
-                feedbackElement.textContent = "";
-                feedbackElement.style.color = "";
-                resetLastClickedMaterial();
-            } else {
-                questionElement.textContent = "Felicitări, ai terminat!";
-                feedbackElement.textContent = "Ai identificat corect toate părțile.";
-                feedbackElement.style.color = "green";
-            }
-        }
         
-        function handleCorrectAnswer(clickedObject) {
-            feedbackElement.textContent = "Corect!";
-            feedbackElement.style.color = "green";
-            
-            // Colorează obiectul în verde permanent
-            clickedObject.material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-            originalMaterials[clickedObject.name] = clickedObject.material; // Salvează noua culoare ca fiind "originală" pentru această rundă
+        const titleElement = document.getElementById('slide-title');
+        const contentElement = document.getElementById('info-content');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const progressIndicator = document.getElementById('progress-indicator');
+        
+        let originalMaterials = {};
+        let highlightedObject = null;
+        const highlightMaterial = new THREE.MeshStandardMaterial({
+            color: 0x3498db,
+            emissive: 0x3498db, // Culoare de "strălucire"
+            emissiveIntensity: 0.7,
+            metalness: 0.2,
+            roughness: 0.5
+        });
 
-            currentQuestionIndex++;
-            setTimeout(displayNextQuestion, 1500); // Treci la următoarea întrebare după 1.5 secunde
-        }
-
-        function handleWrongAnswer(clickedObject) {
-            feedbackElement.textContent = "Încearcă din nou!";
-            feedbackElement.style.color = "red";
-            
-            // Colorează temporar în roșu
-            lastClickedObject = clickedObject;
-            clickedObject.material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-            
-            // Revino la culoarea originală după un timp
-            setTimeout(() => {
-                resetLastClickedMaterial();
-                feedbackElement.textContent = ""; // Șterge feedback-ul
-            }, 1000);
-        }
-
-        function resetLastClickedMaterial() {
-            if (lastClickedObject && originalMaterials[lastClickedObject.name]) {
-                lastClickedObject.material = originalMaterials[lastClickedObject.name];
-                lastClickedObject = null;
+        // --- Conținutul Informativ al Prezentării ---
+        const slides = [
+            {
+                title: "Creierul Uman",
+                text: "Bine ai venit la acest ghid interactiv! Creierul este cel mai complex organ al corpului, centrul de control pentru tot ce facem, gândim și simțim. În continuare, vom explora principalele sale componente și vom înțelege afecțiuni precum demența. Folosește mouse-ul pentru a roti modelul 3D.",
+                targetObjectName: null // Fără highlight la început
+            },
+            {
+                title: "Lobul Frontal",
+                text: "Acesta este centrul personalității și al funcțiilor executive. Este responsabil pentru raționament, planificare, rezolvarea problemelor, vorbire (Aria Broca) și controlul mișcărilor voluntare. Leziunile aici pot afecta personalitatea și capacitatea de a lua decizii.",
+                targetObjectName: "FrontalLobe"
+            },
+            {
+                title: "Lobul Parietal",
+                text: "Procesează informațiile senzoriale precum atingerea, temperatura, durerea și presiunea. De asemenea, joacă un rol crucial în orientarea spațială, navigație și înțelegerea numerelor. Ne ajută să percepem lumea din jurul nostru și să interacționăm cu ea.",
+                targetObjectName: "ParietalLobe"
+            },
+            {
+                title: "Lobul Temporal",
+                text: "Esențial pentru procesarea informațiilor auditive, memorie și înțelegerea limbajului (Aria Wernicke). Aici se formează și se stochează amintirile pe termen lung. Este una dintre primele zone afectate în boala Alzheimer, explicând pierderile de memorie timpurii.",
+                targetObjectName: "TemporalLobe"
+            },
+            {
+                title: "Lobul Occipital",
+                text: "Centrul principal de procesare vizuală al creierului. Interpretează tot ce vedem: culori, forme, mișcare. Leziunile în această zonă pot duce la dificultăți în recunoașterea obiectelor sau chiar la orbire corticală.",
+                targetObjectName: "OccipitalLobe"
+            },
+            {
+                title: "Cerebelul",
+                text: "Cunoscut și ca 'micul creier', cerebelul este vital pentru coordonare, echilibru, postură și precizia mișcărilor. Deși nu inițiază mișcarea, o ajustează și o rafinează, permițându-ne să mergem, să alergăm sau să scriem fără probleme.",
+                targetObjectName: "Cerebellum"
+            },
+            {
+                title: "Ce este Demența?",
+                text: "Demența nu este o boală specifică, ci un termen general (un sindrom) care descrie o deteriorare a funcțiilor cognitive (gândire, memorie, raționament) suficient de severă pentru a afecta viața de zi cu zi. Există mai multe cauze ale demenței.",
+                targetObjectName: null
+            },
+            {
+                title: "Boala Alzheimer",
+                text: "Boala Alzheimer este cea mai comună cauză a demenței, reprezentând 60-80% din cazuri. Este o boală progresivă a creierului caracterizată prin acumularea a două proteine anormale: plăci de beta-amiloid (între neuroni) și mase de proteină tau (în interiorul neuronilor).",
+                targetObjectName: null
+            },
+            {
+                title: "Cum afectează Alzheimer creierul?",
+                text: "Aceste proteine toxice întrerup comunicarea dintre neuroni și duc la moartea acestora. Procesul începe de obicei în zonele responsabile pentru memorie, precum lobul temporal, și se extinde treptat la alte părți ale creierului, provocând o gamă largă de simptome.",
+                targetObjectName: "TemporalLobe" // Re-iluminăm lobul temporal
+            },
+            {
+                title: "Simptomele Alzheimer",
+                text: "Simptomele evoluează în timp. La început, apar pierderi de memorie recentă și dificultăți în găsirea cuvintelor. În stadii avansate, pacienții pot experimenta confuzie severă, schimbări de personalitate, dificultăți în a îndeplini sarcini simple și pierderea capacității de a comunica.",
+                targetObjectName: null
+            },
+            {
+                title: "Explorare Liberă",
+                text: "Acum ai o înțelegere de bază a principalelor structuri ale creierului și a modului în care afecțiuni precum Alzheimer le pot afecta. Folosește acest timp pentru a explora modelul 3D din orice unghi. Cunoașterea este primul pas în lupta împotriva acestor boli.",
+                targetObjectName: null
             }
+        ];
+        let currentSlideIndex = 0;
+
+        // --- Încărcarea modelului 3D ---
+        loader.load('brain.glb', (gltf) => {
+            brainModel = gltf.scene;
+            brainModel.scale.set(1.2, 1.2, 1.2);
+            brainModel.position.set(0, 2, 0);
+
+            brainModel.traverse((node) => {
+                if (node.isMesh) {
+                    node.castShadow = true;
+                    node.receiveShadow = true;
+                    originalMaterials[node.name] = node.material;
+                }
+            });
+            
+            scene.add(brainModel);
+            loadingScreen.style.display = 'none';
+            displaySlide(currentSlideIndex);
+        }, undefined, (error) => {
+            console.error('Eroare la încărcarea modelului:', error);
+            loadingScreen.innerHTML = 'Eroare la încărcarea modelului 3D.';
+        });
+
+        // --- Funcții pentru logică ---
+        function displaySlide(index) {
+            const slide = slides[index];
+            titleElement.textContent = slide.title;
+            contentElement.textContent = slide.text;
+            contentElement.scrollTop = 0; // Resetează scroll-ul la început
+
+            progressIndicator.textContent = `${index + 1} / ${slides.length}`;
+            prevButton.disabled = (index === 0);
+            nextButton.disabled = (index === slides.length - 1);
+
+            highlightObjectByName(slide.targetObjectName);
         }
 
-        // --- Gestionarea evenimentului de click ---
-        function onMouseClick(event) {
-            // Calculează poziția mouse-ului în coordonate normalizate (-1 la +1)
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-            
-            // Setează raycaster-ul să pornească de la cameră în direcția mouse-ului
-            raycaster.setFromCamera(mouse, camera);
-            
-            // Verifică dacă raza intersectează modelul creierului
-            const intersects = raycaster.intersectObjects(brainModel.children, true);
-            
-            if (intersects.length > 0) {
-                const clickedObject = intersects[0].object;
-                console.log('Ai dat click pe:', clickedObject.name); // Util pentru debugging
-                
-                // Verifică dacă jocul s-a terminat
-                if (currentQuestionIndex >= questions.length) return;
+        function highlightObjectByName(name) {
+            // Resetează materialul obiectului anterior
+            if (highlightedObject) {
+                highlightedObject.material = originalMaterials[highlightedObject.name];
+                highlightedObject = null;
+            }
 
-                const expectedObjectName = questions[currentQuestionIndex].targetObjectName;
-
-                resetLastClickedMaterial(); // Resetează culoarea obiectului anterior
-
-                if (clickedObject.name === expectedObjectName) {
-                    handleCorrectAnswer(clickedObject);
-                } else {
-                    handleWrongAnswer(clickedObject);
+            if (name && brainModel) {
+                const objectToHighlight = brainModel.getObjectByName(name);
+                if (objectToHighlight) {
+                    highlightedObject = objectToHighlight;
+                    highlightedObject.material = highlightMaterial;
                 }
             }
         }
+        
+        // --- Event Listeners pentru butoane ---
+        nextButton.addEventListener('click', () => {
+            if (currentSlideIndex < slides.length - 1) {
+                currentSlideIndex++;
+                displaySlide(currentSlideIndex);
+            }
+        });
+
+        prevButton.addEventListener('click', () => {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                displaySlide(currentSlideIndex);
+            }
+        });
 
         // --- Bucla de animație ---
         function animate() {
             requestAnimationFrame(animate);
-            controls.update(); // Important pentru funcționarea controalelor cu "damping"
+            controls.update();
             renderer.render(scene, camera);
         }
 
-        // --- Event Listeners ---
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        window.addEventListener('click', onMouseClick);
-
-        // --- Pornirea animației ---
         animate();
     </script>
 </body>
