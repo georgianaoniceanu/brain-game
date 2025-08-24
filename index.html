@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ro">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghid Interactiv al Creierului și Demenței</title>
+    <title>Interactive Brain and Dementia Guide</title>
     <style>
         body {
             margin: 0;
@@ -90,17 +90,17 @@
 <body>
 
     <div id="info-panel">
-        <h2 id="slide-title">Titlu</h2>
-        <p id="info-content">Conținut informativ...</p>
+        <h2 id="slide-title">Title</h2>
+        <p id="info-content">Informative content...</p>
         <div id="navigation">
-            <button id="prev-button">Anteriorul</button>
+            <button id="prev-button">Previous</button>
             <span id="progress-indicator">1 / N</span>
-            <button id="next-button">Următorul</button>
+            <button id="next-button">Next</button>
         </div>
     </div>
 
     <div id="loading-screen">
-        <p>Se încarcă modelul 3D și informațiile...</p>
+        <p>Loading 3D model and information...</p>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -108,7 +108,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <script>
-        // --- Configurarea de bază a scenei Three.js ---
+        // --- Basic Three.js scene setup ---
         const scene = new THREE.Scene();
         scene.background = new THREE.Color('#dbe9ff');
 
@@ -125,7 +125,7 @@
         controls.enableDamping = true;
         controls.target.set(0, 2, 0);
 
-        // --- Iluminare ---
+        // --- Lighting ---
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
@@ -133,7 +133,7 @@
         directionalLight.castShadow = true;
         scene.add(directionalLight);
 
-        // --- Variabile pentru logica prezentării ---
+        // --- Variables for presentation logic ---
         let brainModel;
         const loader = new THREE.GLTFLoader();
         const loadingScreen = document.getElementById('loading-screen');
@@ -148,73 +148,73 @@
         let highlightedObject = null;
         const highlightMaterial = new THREE.MeshStandardMaterial({
             color: 0x3498db,
-            emissive: 0x3498db, // Culoare de "strălucire"
+            emissive: 0x3498db,
             emissiveIntensity: 0.7,
             metalness: 0.2,
             roughness: 0.5
         });
 
-        // --- Conținutul Informativ al Prezentării ---
+        // --- Informative Presentation Content ---
         const slides = [
             {
-                title: "Creierul Uman",
-                text: "Bine ai venit la acest ghid interactiv! Creierul este cel mai complex organ al corpului, centrul de control pentru tot ce facem, gândim și simțim. În continuare, vom explora principalele sale componente și vom înțelege afecțiuni precum demența. Folosește mouse-ul pentru a roti modelul 3D.",
-                targetObjectName: null // Fără highlight la început
+                title: "The Human Brain",
+                text: "Welcome to this interactive guide! The brain is the body's most complex organ, the control center for everything we do, think, and feel. We will explore its main components and understand conditions like dementia. Use your mouse to rotate the 3D model.",
+                targetObjectName: null
             },
             {
-                title: "Lobul Frontal",
-                text: "Acesta este centrul personalității și al funcțiilor executive. Este responsabil pentru raționament, planificare, rezolvarea problemelor, vorbire (Aria Broca) și controlul mișcărilor voluntare. Leziunile aici pot afecta personalitatea și capacitatea de a lua decizii.",
+                title: "The Frontal Lobe",
+                text: "This is the center of personality and executive functions. It is responsible for reasoning, planning, problem-solving, speech (Broca's Area), and the control of voluntary movements. Lesions here can affect personality and decision-making ability.",
                 targetObjectName: "FrontalLobe"
             },
             {
-                title: "Lobul Parietal",
-                text: "Procesează informațiile senzoriale precum atingerea, temperatura, durerea și presiunea. De asemenea, joacă un rol crucial în orientarea spațială, navigație și înțelegerea numerelor. Ne ajută să percepem lumea din jurul nostru și să interacționăm cu ea.",
+                title: "The Parietal Lobe",
+                text: "It processes sensory information such as touch, temperature, pain, and pressure. It also plays a crucial role in spatial orientation, navigation, and understanding numbers. It helps us perceive the world around us and interact with it.",
                 targetObjectName: "ParietalLobe"
             },
             {
-                title: "Lobul Temporal",
-                text: "Esențial pentru procesarea informațiilor auditive, memorie și înțelegerea limbajului (Aria Wernicke). Aici se formează și se stochează amintirile pe termen lung. Este una dintre primele zone afectate în boala Alzheimer, explicând pierderile de memorie timpurii.",
+                title: "The Temporal Lobe",
+                text: "Essential for processing auditory information, memory, and language comprehension (Wernicke's Area). This is where long-term memories are formed and stored. It is one of the first areas affected in Alzheimer's disease, explaining early memory loss.",
                 targetObjectName: "TemporalLobe"
             },
             {
-                title: "Lobul Occipital",
-                text: "Centrul principal de procesare vizuală al creierului. Interpretează tot ce vedem: culori, forme, mișcare. Leziunile în această zonă pot duce la dificultăți în recunoașterea obiectelor sau chiar la orbire corticală.",
+                title: "The Occipital Lobe",
+                text: "The brain's primary visual processing center. It interprets everything we see: colors, shapes, and movement. Lesions in this area can lead to difficulties recognizing objects or even cortical blindness.",
                 targetObjectName: "OccipitalLobe"
             },
             {
-                title: "Cerebelul",
-                text: "Cunoscut și ca 'micul creier', cerebelul este vital pentru coordonare, echilibru, postură și precizia mișcărilor. Deși nu inițiază mișcarea, o ajustează și o rafinează, permițându-ne să mergem, să alergăm sau să scriem fără probleme.",
+                title: "The Cerebellum",
+                text: "Also known as the 'little brain,' the cerebellum is vital for coordination, balance, posture, and the precision of movements. While it doesn't initiate movement, it adjusts and refines it, allowing us to walk, run, or write smoothly.",
                 targetObjectName: "Cerebellum"
             },
             {
-                title: "Ce este Demența?",
-                text: "Demența nu este o boală specifică, ci un termen general (un sindrom) care descrie o deteriorare a funcțiilor cognitive (gândire, memorie, raționament) suficient de severă pentru a afecta viața de zi cu zi. Există mai multe cauze ale demenței.",
+                title: "What is Dementia?",
+                text: "Dementia is not a specific disease, but a general term (a syndrome) that describes a decline in cognitive functions (thinking, memory, reasoning) severe enough to interfere with daily life. There are several causes of dementia.",
                 targetObjectName: null
             },
             {
-                title: "Boala Alzheimer",
-                text: "Boala Alzheimer este cea mai comună cauză a demenței, reprezentând 60-80% din cazuri. Este o boală progresivă a creierului caracterizată prin acumularea a două proteine anormale: plăci de beta-amiloid (între neuroni) și mase de proteină tau (în interiorul neuronilor).",
+                title: "Alzheimer's Disease",
+                text: "Alzheimer's disease is the most common cause of dementia, accounting for 60-80% of cases. It is a progressive brain disease characterized by the accumulation of two abnormal proteins: beta-amyloid plaques (between neurons) and tau protein tangles (inside neurons).",
                 targetObjectName: null
             },
             {
-                title: "Cum afectează Alzheimer creierul?",
-                text: "Aceste proteine toxice întrerup comunicarea dintre neuroni și duc la moartea acestora. Procesul începe de obicei în zonele responsabile pentru memorie, precum lobul temporal, și se extinde treptat la alte părți ale creierului, provocând o gamă largă de simptome.",
-                targetObjectName: "TemporalLobe" // Re-iluminăm lobul temporal
+                title: "How Does Alzheimer's Affect the Brain?",
+                text: "These toxic proteins disrupt communication between neurons and lead to their death. The process usually begins in areas responsible for memory, like the temporal lobe, and gradually spreads to other parts of the brain, causing a wide range of symptoms.",
+                targetObjectName: "TemporalLobe"
             },
             {
-                title: "Simptomele Alzheimer",
-                text: "Simptomele evoluează în timp. La început, apar pierderi de memorie recentă și dificultăți în găsirea cuvintelor. În stadii avansate, pacienții pot experimenta confuzie severă, schimbări de personalitate, dificultăți în a îndeplini sarcini simple și pierderea capacității de a comunica.",
+                title: "Symptoms of Alzheimer's",
+                text: "Symptoms evolve over time. Initially, recent memory loss and difficulty finding words appear. In advanced stages, patients may experience severe confusion, personality changes, difficulty performing simple tasks, and loss of communication ability.",
                 targetObjectName: null
             },
             {
-                title: "Explorare Liberă",
-                text: "Acum ai o înțelegere de bază a principalelor structuri ale creierului și a modului în care afecțiuni precum Alzheimer le pot afecta. Folosește acest timp pentru a explora modelul 3D din orice unghi. Cunoașterea este primul pas în lupta împotriva acestor boli.",
+                title: "Free Exploration",
+                text: "You now have a basic understanding of the main brain structures and how conditions like Alzheimer's can affect them. Use this time to explore the 3D model from any angle. Knowledge is the first step in the fight against these diseases.",
                 targetObjectName: null
             }
         ];
         let currentSlideIndex = 0;
 
-        // --- Încărcarea modelului 3D ---
+        // --- Loading the 3D model ---
         loader.load('brain.glb', (gltf) => {
             brainModel = gltf.scene;
             brainModel.scale.set(1.2, 1.2, 1.2);
@@ -232,16 +232,16 @@
             loadingScreen.style.display = 'none';
             displaySlide(currentSlideIndex);
         }, undefined, (error) => {
-            console.error('Eroare la încărcarea modelului:', error);
-            loadingScreen.innerHTML = 'Eroare la încărcarea modelului 3D.';
+            console.error('Error loading the model:', error);
+            loadingScreen.innerHTML = 'Error loading the 3D model.';
         });
 
-        // --- Funcții pentru logică ---
+        // --- Functions for logic ---
         function displaySlide(index) {
             const slide = slides[index];
             titleElement.textContent = slide.title;
             contentElement.textContent = slide.text;
-            contentElement.scrollTop = 0; // Resetează scroll-ul la început
+            contentElement.scrollTop = 0;
 
             progressIndicator.textContent = `${index + 1} / ${slides.length}`;
             prevButton.disabled = (index === 0);
@@ -251,7 +251,7 @@
         }
 
         function highlightObjectByName(name) {
-            // Resetează materialul obiectului anterior
+            // Reset the material of the previous object
             if (highlightedObject) {
                 highlightedObject.material = originalMaterials[highlightedObject.name];
                 highlightedObject = null;
@@ -266,7 +266,7 @@
             }
         }
         
-        // --- Event Listeners pentru butoane ---
+        // --- Event Listeners for buttons ---
         nextButton.addEventListener('click', () => {
             if (currentSlideIndex < slides.length - 1) {
                 currentSlideIndex++;
@@ -281,7 +281,7 @@
             }
         });
 
-        // --- Bucla de animație ---
+        // --- Animation loop ---
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
